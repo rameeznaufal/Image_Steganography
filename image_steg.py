@@ -1,3 +1,7 @@
+#end delimiter is '#####'
+#encrypted images are saved in the current directory present
+#As of now supported formats are only PNG
+
 import cv2
 import os
 import numpy as np
@@ -47,15 +51,33 @@ def hideData(image, secret_message):
               break
   return image
 
+def showData(image):  
+  binary_data = ""
+  for values in image:
+      for pixel in values:
+          r, g, b = messageToBinary(pixel)
+          binary_data += r[-1] 
+          binary_data += g[-1] 
+          binary_data += b[-1] 
+  all_bytes = [ binary_data[i: i+8] for i in range(0, len(binary_data), 8) ]
+  decoded_data = ""
+  for byte in all_bytes:
+      decoded_data += chr(int(byte, 2))
+      if decoded_data[-5:] == "#####": #check if we have reached the delimeter which is "#####"
+          break
+  #print(decoded_data)
+  return decoded_data[:-5]
+
 def encode_text(): 
-  image_name = input("Enter image name (with extension): ") 
+  image_name = input("Enter image path (with extension): ") 
   image = cv2.imread(image_name) 
   
   print("The shape of the image is: ",image.shape) 
   print("The original image is as shown below: ")
   resized_image = cv2.resize(image, (500, 500))
-  cv2.imshow(resized_image) 
-    
+  cv2.imshow('image',resized_image)
+  cv2.waitKey()   
+
   data = input("Enter data to be encoded : ") 
   if (len(data) == 0): 
     raise ValueError('Data is empty')
@@ -63,6 +85,18 @@ def encode_text():
   filename = input("Enter the name of new encoded image(with extension): ")
   encoded_image = hideData(image, data) 
   cv2.imwrite(filename, encoded_image)
+
+def decode_text():
+  image_name = input("Enter the path of the steganographed image that you want to decode (with extension) :") 
+  image = cv2.imread(image_name)  
+
+  print("The Steganographed image is as shown below: ")
+  resized_image = cv2.resize(image, (500, 500)) 
+  cv2.imshow('Sample Image',resized_image) 
+  cv2.waitKey()  
+    
+  text = showData(image)
+  return text
 
 def Steganography(): 
     while True: 
@@ -75,15 +109,15 @@ def Steganography():
          userinput = int(a) 
          if (userinput == 1):
            print("\nEncoding....")
-           #encode_text() 
+           encode_text() 
          elif (userinput == 2):
            print("\nDecoding....") 
-           print("Decoded message is "                ) 
-                                       #+  decode_text() 
+           print("Decoded message is: "  +  decode_text()) 
          else:
           raise Exception("Enter correct input") 
-      except:
-         print('\n !!! ENTER THE CORRECT OPTION !!! \n ')    
+      except Exception as Ex:
+         print(f"A FAULT of type {type(Ex).__name__} occured.") 
+         print('\n !!! ENTER A VALID OPTION !!! \n ')    
       finally:
          ch = str(input(" Do you want to go back ? (Y/n)")).upper()
       os.system('cls')
